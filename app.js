@@ -23,7 +23,7 @@ app.get("/",async (req,res)=>{
 })
 
 app.get("/about",(req,res)=>{
-    const name = "Manish Basnet"
+    const name = "Jenisha Shrestha"
     res.render("about.ejs",{name})
 })
 app.get("/createblog",(req,res)=>{

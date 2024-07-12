@@ -1,3 +1,5 @@
+require("dotenv").config()
+const isAuthenticated = require("./middleware/isAunthenticated")
 const express = require("express")
 const connectToDb = require("./database/databaseConnection")
 const Blog = require("./model/blogModel")
@@ -5,10 +7,14 @@ const bcrypt = require('bcrypt')
 const app = express() 
 // const multer = require("./middleware/multerConfig").multer
 // const storage = require("./middleware/multerConfig").storage
+const cookieParser = require('cookie-parser')
+
+app.use(cookieParser())
 
 const {multer,storage} = require('./middleware/multerConfig') 
 const User = require("./model/userModel")
 const upload = multer({storage : storage})
+const jwt = require("jsonwebtoken")
 
 connectToDb()
 
@@ -22,11 +28,12 @@ app.get("/",async (req,res)=>{
     res.render("./blog/home",{blogs})
 })
 
-app.get("/about",(req,res)=>{
+app.get("/about",isAuthenticated,(req,res)=>{
     const name = "Jenisha Shrestha"
     res.render("about.ejs",{name})
 })
-app.get("/createblog",(req,res)=>{
+app.get("/createblog",isAuthenticated,(req,res)=>{
+    console.log(req.userId)
     res.render("./blog/createBlog")
 })
 
@@ -109,6 +116,10 @@ app.post("/login",async (req,res)=>{
     if(!isMatched){
         res.send("Invalid password")
     }else{
+        const token = jwt.sign({userId : user[0]._id},process.env.SECRET, {
+          expiresIn : '20d'
+        })
+       res.cookie("token",token)
         res.send("logged in successfully")
     }
   }
@@ -116,6 +127,8 @@ app.post("/login",async (req,res)=>{
 })
 
 app.use(express.static("./storage"))
+app.use(express.static("./public"))
+
 
 app.listen(3000,()=>{
     console.log("Nodejs project has started at port" + 3000)
